@@ -44,3 +44,48 @@ def get_edges(mask: List[List[bool]], bbox: List[int] = None) -> List[List[int]]
             except IndexError:
                 continue
     return edges
+
+
+def remove_redundant(edges: List[List[float]], y: bool = True) -> List[List[float]]:
+    """
+    Removes redundant points from a list of edges.
+
+    For example: [[574, 16], [..., 16], [750, 16],...]
+
+    Becomes: [[574, 16], [750, 16], ...]
+
+    Eliminating the points in between as they are not needed to maintain a straight line.
+
+    :param edges:
+    :param y: Determines if redundancy is removed on the `y` axis, otherwise it uses the `x` axis.
+    :return:
+    """
+    if y:
+        axis = 1
+    else:
+        axis = 0
+    edges = sorted(edges, key=lambda x: x[axis])
+    # Tracking the first and last index of the coordinate in focus
+    coord = None
+    first = None
+    last = None
+    new_edges = []
+    for index, point in enumerate(edges):
+        if coord is None:
+            coord = point[axis]
+            first = index
+            last = index
+            continue
+
+        if point[axis] != coord:
+            points = [edges[first]]
+            if last - first > 0:
+                points.append(edges[last])
+            new_edges.extend(points)
+            coord = point[axis]
+            first = index
+            last = index
+
+        else:
+            last = index
+    return new_edges
